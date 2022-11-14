@@ -1,0 +1,7 @@
+ 
+            grasp_file =  /global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/GRASP//LFT/L1-078/m189_m52_78.0G_000deg_tp.grd
+            grasp_format = grd_polar 
+            grasp_copol = x
+            grasp_norm = four_pi
+            stokes_file_polar = !/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/GRASP//LFT/L1-078/m189_m52_78.0G_000deg_tp_fpcoord_0.16285_0.26849.fits
+            

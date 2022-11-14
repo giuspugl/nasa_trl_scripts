@@ -1,0 +1,9 @@
+  
+    beam_main_file_polar = /tmp/L07_008_UB_089B.fits
+    beam_nphi=1000   
+    beam_ntheta=1001   
+    beam_lmax=1024  
+    beam_mmax=140
+    beam_alm_file= !/tmp/blm_L07_008_UB_089B.fits 
+    
+    
