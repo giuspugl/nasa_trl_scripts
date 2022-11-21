@@ -7,9 +7,9 @@
     API = 0 # Internal interface version for this operator
     boresight = "boresight_radec" # Observation shared key for boresight
     det_data = "signal" # Observation detdata key to initialize
-    det_data_units = "unit K" # Output units if creating detector data
+    det_data_units = "unit uK" # Output units if creating detector data
     det_flags = "flags" # Observation detdata key for flags to initialize
-    #detset_key = "wafer" # If specified, use this column of the focalplane detector_data to group detectors
+    detset_key = "pixel" # If specified, use this column of the focalplane detector_data to group detectors
     distribute_time = false # Distribute observation data along the time axis rather than detector axis
     enabled = true # If True, this class instance is marked as enabled
     hwp_angle = "hwp_angle" # Observation shared key for HWP angle
@@ -36,7 +36,7 @@
 [operators.scan_temp]
     class = "toast.ops.scan_healpix.ScanHealpixMap"
     API = 0 # Internal interface version for this operator
-    det_data = "template" # Observation detdata key for accumulating output
+    det_data = "templateI" # Observation detdata key for accumulating output
     det_data_units = "unit uK" # Output units if creating detector data
     enabled = true # If True, this class instance is marked as enabled
     file = "/global/cfs/cdirs/litebird/simulations/maps/post_ptep_inputs_20220522/beam_convolved/all_fg/LB_LFT_50_all_fg_postPTEP20220609.fits" # Path to healpix FITS file
@@ -52,8 +52,7 @@
 [operators.scan_map]
     class = "toast.ops.scan_healpix.ScanHealpixMap"
     API = 0 # Internal interface version for this operator
-    det_data = "signal" # Observation detdata key for accumulating output
-    det_data_units = "unit uK" # Output units if creating detector data
+    det_data = "beamconvolved" # Observation detdata key for accumulating output
     enabled = true # If True, this class instance is marked as enabled
     file = "/global/cfs/cdirs/litebird/simulations/maps/post_ptep_inputs_20220522/beam_convolved/all_fg/LB_LFT_50_all_fg_postPTEP20220609.fits" # Path to healpix FITS file
     name = "scan_map" # The 'name' of this class instance
@@ -73,8 +72,8 @@
     API = 0 # Internal interface version for this operator
     component = 0 # The noise component index
     det_data = "signal" # Observation detdata key for accumulating noise timestreams
-    det_data_units = "unit K" # Desired output units of the timestream
-    enabled = true    # If True, this class instance is marked as enabled
+    det_data_units = "unit uK" # Desired output units of the timestream
+    enabled = true     # If True, this class instance is marked as enabled
     name = "sim_noise" # The 'name' of this class instance
     noise_model = "noise_model" # Observation key containing the noise model
     realization = 0 # The noise realization index
@@ -85,8 +84,8 @@
     class = "toast.ops.pointing_detector.PointingDetectorSimple"
     API = 0 # Internal interface version for this operator
     boresight = "boresight_radec" # Observation shared key for boresight
-    coord_in = "None" # The input boresight coordinate system ('C', 'E', 'G')
-    coord_out = "None" # The output coordinate system ('C', 'E', 'G')
+    coord_in = "G" # The input boresight coordinate system ('C', 'E', 'G')
+    coord_out = "G" # The output coordinate system ('C', 'E', 'G')
     enabled = true # If True, this class instance is marked as enabled
     name = "det_pointing" # The 'name' of this class instance
     quats = "quats" # Observation detdata key for output quaternions
@@ -133,7 +132,7 @@
     beam_file = "expanded_beams/{detector}.fits" # File containing the beam a_lm expansion.  Tag {detector} will be replaced with the detector name.
     calibrate = true # Calibrate intensity to 1.0, rather than (1 + epsilon) / 2. Calibrate has no effect if the beam is found to be normalized rather than scaled with the leakage factor.
     comm = "None" # MPI communicator to use for the convolution. libConviqt does not work without MPI.
-    det_data = "signal" # Observation detdata key for accumulating convolved timestreams
+    det_data = "beamconvolved" # Observation detdata key for accumulating convolved timestreams
     det_flag_mask = 1 # Bit mask value for optional detector flagging
     det_flags = "flags" # Observation detdata key for flags to use
     detector_pointing = "None" # Operator that translates boresight pointing into detector frame
@@ -200,7 +199,7 @@
     class = "toast.ops.mapmaker.MapMaker"
     API = 0 # Internal interface version for this operator
     binning = "None" # Binning operator used for solving template amplitudes
-    convergence = 1e-12 # Relative convergence limit
+    convergence = 1e0 #Relative convergence limit
     det_data = "signal" # Observation detdata key for the timestream data
     enabled = true # If True, this class instance is marked as enabled
     iter_max = 100 # Maximum number of iterations
@@ -247,7 +246,7 @@
     name = "calibrator" # The 'name' of this class instance
     report_memory = false # Report memory throughout the execution
     reset_pix_dist = false # Clear any existing pixel distribution.  Useful when applying repeatedly to different data objects.
-    result = "fitted_g_amplitudes" # Observation detdata key for the output
+    result = "signal" # Observation detdata key for the output
     solve_rcond_threshold = 1e-08 # When solving, minimum value for inverse pixel condition number cut.
     template_matrix = "None" # This must be an instance of a template matrix operator
 
@@ -266,35 +265,14 @@
     single_precision = false # If True, use 32bit int in output
     use_python = false # If True, use python implementation
     view = "None" # Use this view of the data in all observations
-
-[operators.binner_final]
-    class = "toast.ops.mapmaker_binning.BinMap"
-    API = 0 # Internal interface version for this operator
-    binned = "binned" # The Data key where the binned map should be stored
-    covariance = "covariance" # The Data key containing the noise covariance PixelData instance
-    det_data = "signal" # Observation detdata key for the timestream data
-    det_data_units = "unit K" # Desired timestream units
-    det_flag_mask = 1 # Bit mask value for optional detector flagging
-    det_flags = "flags" # Observation detdata key for flags to use
-    enabled = false # If True, this class instance is marked as enabled
-    full_pointing = false # If True, expand pointing for all detectors and save
-    name = "binner_final" # The 'name' of this class instance
-    noise_model = "noise_model" # Observation key containing the noise model
-    noiseweighted = "None" # The Data key where the noiseweighted map should be stored
-    pixel_dist = "pix_dist_final" # The Data key where the PixelDist object should be stored
-    pixel_pointing = "None" # This must be an instance of a pixel pointing operator
-    pre_process = "None" # Optional extra operator to run prior to binning
-    shared_flag_mask = 1 # Bit mask value for optional telescope flagging
-    shared_flags = "flags" # Observation shared key for telescope flags to use
-    stokes_weights = "None" # This must be an instance of a Stokes weights operator
-    sync_type = "alltoallv" # Communication algorithm: 'allreduce' or 'alltoallv'
+ 
 
 [operators.sim_crosstalk]
     class = "toast.ops.sim_crosstalk.CrossTalk"
     API = 0 # Internal interface version for this operator
     det_data = "signal" # Observation detdata key for the timestream data
     detector_ordering = "random" # Initialize Crosstalk matrix with detector ordering: `random, gap,constant` default `random` 
-    enabled = true   # If True, this class instance is marked as enabled
+    enabled = false   # If True, this class instance is marked as enabled
     name = "sim_crosstalk" # The 'name' of this class instance
     realization = 0 # integer to set a different random seed 
     view = "None" # Use this view of the data in all observations
@@ -304,7 +282,7 @@
     class = "toast.ops.sim_crosstalk.MitigateCrossTalk"
     API = 0 # Internal interface version for this operator
     det_data = "signal" # Observation detdata key for the timestream data
-    enabled =   true  # If True, this class instance is marked as enabled
+    enabled =   false  # If True, this class instance is marked as enabled
     error_coefficients = 0.001 # relative amplitude to simulate crosstalk errors on the inverse matrix 
     name = "mitigate_crosstalk" # The 'name' of this class instance
     realization = 0 # integer to set a different random seed 
@@ -321,7 +299,7 @@
     name = "sim_gscramble" # The 'name' of this class instance
     pattern = ".*" # Regex pattern to match against detector names. Only detectors that match the pattern are scrambled.
     realization = 0 # Realization index
-    sigma = 0.01 # Gain distribution width
+    sigma = 0.0001 # Gain distribution width
     
 [operators.sim_gdrifts]
     class = "toast.ops.sim_gaindrifts.GainDrifter"
@@ -345,7 +323,7 @@
     det_data = "signal" # Observation detdata key to inject the gain drift
     detector_mismatch = 0.1 # mismatch between detectors for `thermal_drift` and `slow_drift` ranging from 0 to 1. Default value implies no common mode injected
     drift_mode = "thermal_drift" # a string from [linear_drift, thermal_drift, slow_drift] to set the way the drift is modelled
-    enabled = false     # If True, this class instance is marked as enabled
+    enabled = false      # If True, this class instance is marked as enabled
     fknee_drift = " 1 Hz" # as in the PTEP 
     focalplane_Tbath = "100 mK" # temperature of the focalplane for `thermal_drift` 
     focalplane_group = "wafer" # focalplane table column to use for grouping detectors: can be any string like "wafer", "pixel"
@@ -359,7 +337,7 @@
 [operators.sim_cosmicrays]
     class = "toast.ops.sim_cosmic_rays.InjectCosmicRays"
     API = 0 # Internal interface version for this operator
-    conversion_factor = "5.73e12 K/W" # factor to convert the cosmic ray signal (usually Watts) into temperature units
+    conversion_factor = "5.73e18 uK/W" # factor to convert the cosmic ray signal (usually Watts) into temperature units
     crdata_units = "unit W" # set the unities of the input amplitudes 
     crfile = "input_data/cosmic_ray_glitches.npz" # Path to the *.npz file encoding cosmic ray infos
     det_data = "signal" # Observation detdata key to inject the gain drift
@@ -420,13 +398,13 @@
     class = "toast.templates.gaintemplate.GainTemplate"
     data = "None" # This must be an instance of a Data class (or None)
     det_data = "signal" # Observation detdata key for the timestream data
-    det_data_units = "unit K" # Desired timestream units
+    det_data_units = "unit uK" # Desired timestream units
     det_flag_mask = 1 # Bit mask value for solver flags
     det_flags = "flags" # Observation detdata key for solver flags to use
     enabled = true         # If True, this class instance is marked as enabled
     name = "gain_amplitudes" # The 'name' of this class instance
     noise_model = "None" # Observation key containing the   noise model 
-    order = 5 # The order of Legendre polynomials to fit the gain amplitudes 
+    order = 0 # The order of Legendre polynomials to fit the gain amplitudes 
     template_name = "template" # detdata key encoding the signal estimate to fit the gain amplitudes
     use_accel = false # If True, use the accelerator
     view = "None" # Use this view of the data in all observations

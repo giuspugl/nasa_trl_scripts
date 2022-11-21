@@ -193,26 +193,30 @@ def simulate_data(job, toast_comm, telescope, schedule):
     # as the solve.
     if not ops.binner_final.enabled:
         ops.binner_final = ops.binner
+    ops.sim_dipole.coord= "G" 
+    ops.sim_dipole.mode= "solar" 
+    ops.sim_dipole.det_data_units=ops.sim_satellite.det_data_units
+    # Generate dipole timestreams 
+    ops.sim_dipole.det_data="template" 
+    ops.sim_dipole.apply(data)
+    log.info_rank("Scan  dipole  for template ", comm=world_comm, timer=timer)
+    
+    
+    ops.sim_dipole.det_data="signal" 
+    
+    ops.sim_dipole.apply(data) 
+    log.info_rank("Scan  dipole  signal ", comm=world_comm, timer=timer)
+    
     
     ops.scan_map.pixel_dist = ops.binner_final.pixel_dist
     ops.scan_map.pixel_pointing = ops.pixels_final
     ops.scan_map.stokes_weights = ops.weights
     ops.scan_map.save_pointing = use_full_pointing(job)
-    ops.scan_map.apply(data)
+    #ops.scan_map.apply(data)
+    #import pdb; pdb.set_trace() 
     log.info_rank("Scan sky signal ", comm=world_comm, timer=timer)
     
-    ops.sim_dipole.coord= "G" 
-    ops.sim_dipole.mode= "solar" 
     
-    
-    # Generate dipole timestreams 
-    ops.sim_dipole.det_data="template" 
-    ops.sim_dipole.apply(data)
-            
-    ops.sim_dipole.det_data="signal" 
-    
-    ops.sim_dipole.apply(data) 
-    log.info_rank("Scan  dipole  signal ", comm=world_comm, timer=timer)
  
     # scan the template 
     
@@ -231,6 +235,17 @@ def simulate_data(job, toast_comm, telescope, schedule):
     ops.beam_convolution.apply(data)
     
     log.info_rank("sky signal convolved w/ beam in", comm=world_comm, timer=timer)
+    
+    ops.add_data.first =  'template'
+    ops.add_data.second='templateI' 
+    ops.add_data.result='template' 
+    ops.add_data.apply(data)
+    
+    ops.add_data.first =  'templateI'
+    ops.add_data.second='signal' 
+    ops.add_data.result='signal' 
+    ops.add_data.apply(data)
+    
     # Apply a time constant
 
     ops.convolve_time_constant.apply(data)
@@ -354,35 +369,32 @@ def main():
         toast.ops.SimSatellite(name="sim_satellite", detset_key="pixel"),
         toast.ops.DefaultNoiseModel(name="default_model"),
         toast.ops.SimDipole(name="sim_dipole"), 
+        toast.ops.Combine(name='add_data' ,op='add' ), 
         toast.ops.SimTEBConviqt(name="beam_convolution"), 
         toast.ops.ScanHealpixMap(name="scan_map" ),
         toast.ops.ScanHealpixMap(name="scan_temp" ),
-        toast.ops.TimeConstant(
-            name="convolve_time_constant",  
-        ),
+        toast.ops.TimeConstant(name="convolve_time_constant" ),
         toast.ops.SimNoise(name="sim_noise"),
         toast.ops.PointingDetectorSimple(name="det_pointing"),
         toast.ops.PixelsHealpix(name="pixels"),
-        toast.ops.StokesWeights(name="weights", mode="IQU"),
+        toast.ops.StokesWeights(name="weights" ),
         toast.ops.TimeConstant(
-            name="deconvolve_time_constant", deconvolve=True, enabled=True
-        ),
-        toast.ops.SaveHDF5(name="save_hdf5", enabled=False),
+            name="deconvolve_time_constant" ),
+        toast.ops.SaveHDF5(name="save_hdf5" ),
         toast.ops.BinMap(name="binner", pixel_dist="pix_dist"),
         toast.ops.MapMaker(name="mapmaker"),
         toast.ops.Calibrate(name="calibrator"),
-        toast.ops.PixelsHealpix(name="pixels_final", enabled=False),
+        toast.ops.PixelsHealpix(name="pixels_final" ),
         toast.ops.BinMap(
-            name="binner_final", enabled=False, pixel_dist="pix_dist_final"
+            name="binner_final" ,pixel_dist="pix_dist_final"
         ),
         #systematics 
         toast.ops.CrossTalk(name="sim_crosstalk"),
         toast.ops.MitigateCrossTalk(name="mitigate_crosstalk"), 
-        toast.ops.GainDrifter(name="sim_gdrifts" ,),#enabled=True ),
-        toast.ops.GainDrifter(name="sim_thermdrifts"  ,),#enabled=True ),
-        toast.ops.GainScrambler(name="sim_gscramble" ,),#enabled=True ),
-        toast.ops.InjectCosmicRays(name="sim_cosmicrays", crfile= "input_data/cosmic_ray_glitches.npz" ),
-        
+        toast.ops.GainDrifter(name="sim_gdrifts" ) ,
+        toast.ops.GainDrifter(name="sim_thermdrifts"  ), 
+        toast.ops.GainScrambler(name="sim_gscramble" ),
+        toast.ops.InjectCosmicRays(name="sim_cosmicrays",crfile = "" ),
     ]
     
     if toast.ops.madam.available():
