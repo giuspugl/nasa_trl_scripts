@@ -129,7 +129,8 @@
     class = "toast.ops.conviqt.SimTEBConviqt"
     API = 0 # Internal interface version for this operator
     apply_flags = false # Only synthesize signal for unflagged samples.
-    beam_file = "expanded_beams/{detector}.fits" # File containing the beam a_lm expansion.  Tag {detector} will be replaced with the detector name.
+    #beam_file = "expanded_beams/{detector}.fits" # File containing the beam a_lm expansion.  Tag {detector} will be replaced with the detector name.
+    beam_file="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/L00_000_QA_050T.fits" 
     calibrate = true # Calibrate intensity to 1.0, rather than (1 + epsilon) / 2. Calibrate has no effect if the beam is found to be normalized rather than scaled with the leakage factor.
     comm = "None" # MPI communicator to use for the convolution. libConviqt does not work without MPI.
     det_data = "beamconvolved" # Observation detdata key for accumulating convolved timestreams
@@ -151,7 +152,7 @@
     remove_monopole = false # Suppress the temperature monopole in sky_file.
     shared_flag_mask = 1 # Bit mask value for optional flagging
     shared_flags = "flags" # Observation shared key for telescope flags to use
-    sky_file ="sky_inputs_alm/sky_alm_L00_000_QA_050T.fits" # File containing the sky a_lm expansion.  Tag {detector} will be replaced with the detector name
+    sky_file ="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/sky_alm_L00_000_QA_050T.fits" # File containing the sky a_lm expansion.  Tag {detector} will be replaced with the detector name
     verbosity = 0 # 
     view = "None" # Use this view of the data in all observations
     [operators.beam_convolution.beam_file_dict] # Dictionary of files containing the beam a_lm expansions. An entry for each detector name must be present. If provided, supersedes `beam_file`.
