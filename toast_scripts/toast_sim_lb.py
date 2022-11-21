@@ -212,7 +212,7 @@ def simulate_data(job, toast_comm, telescope, schedule):
     ops.scan_map.pixel_pointing = ops.pixels_final
     ops.scan_map.stokes_weights = ops.weights
     ops.scan_map.save_pointing = use_full_pointing(job)
-    #ops.scan_map.apply(data)
+    ops.scan_map.apply(data)
     #import pdb; pdb.set_trace() 
     log.info_rank("Scan sky signal ", comm=world_comm, timer=timer)
     
@@ -241,10 +241,11 @@ def simulate_data(job, toast_comm, telescope, schedule):
     ops.add_data.result='template' 
     ops.add_data.apply(data)
     
-    ops.add_data.first =  'templateI'
+    ops.add_data.first =  'beamconvolved'
     ops.add_data.second='signal' 
     ops.add_data.result='signal' 
     ops.add_data.apply(data)
+    import pbd ; pdb.set_trace() 
     
     # Apply a time constant
 

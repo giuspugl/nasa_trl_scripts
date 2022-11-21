@@ -39,7 +39,7 @@
     det_data = "templateI" # Observation detdata key for accumulating output
     det_data_units = "unit uK" # Output units if creating detector data
     enabled = true # If True, this class instance is marked as enabled
-    file = "/global/cfs/cdirs/litebird/simulations/maps/post_ptep_inputs_20220522/beam_convolved/all_fg/LB_LFT_50_all_fg_postPTEP20220609.fits" # Path to healpix FITS file
+    file = "/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/map.fits" # Path to healpix FITS file
     name = "scan_temp" # The 'name' of this class instance
     pixel_dist = "pixel_dist" # The Data key where the PixelDistribution object is located
     pixel_pointing = "None" # This must be an instance of a pixel pointing operator
@@ -53,8 +53,8 @@
     class = "toast.ops.scan_healpix.ScanHealpixMap"
     API = 0 # Internal interface version for this operator
     det_data = "beamconvolved" # Observation detdata key for accumulating output
-    enabled = true # If True, this class instance is marked as enabled
-    file = "/global/cfs/cdirs/litebird/simulations/maps/post_ptep_inputs_20220522/beam_convolved/all_fg/LB_LFT_50_all_fg_postPTEP20220609.fits" # Path to healpix FITS file
+    enabled = true  # If True, this class instance is marked as enabled
+    file = "/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/map.fits" # Path to healpix FITS file
     name = "scan_map" # The 'name' of this class instance
     pixel_dist = "pixel_dist" # The Data key where the PixelDistribution object is located
     pixel_pointing = "None" # This must be an instance of a pixel pointing operator
@@ -139,7 +139,7 @@
     beammmax = 140 # Beam maximum m.  Actual resolution in the Healpix FITS file may differ. If not set, will use the maximum expansion order from file. 
     lmax = 1024 # Maximum ell (and m).  Actual resolution in the Healpix FITS file may differ.  If not set, will use the maximum expansion order from file.
     dxx = false # The beam frame is either Dxx or Pxx. Pxx includes the rotation to polarization sensitive basis, Dxx does not. When Dxx=True, detector orientation from attitude quaternions is corrected for the polarization angle.
-    enabled = false   # If True, this class instance is marked as enabled
+    enabled = false    # If True, this class instance is marked as enabled
     fwhm = "58.5 arcmin" # Width of a symmetric gaussian beam already present in the skyfile (will be deconvolved away).
     hwp_angle = "None" # Observation shared key for HWP angle
     mc = "None" # Monte Carlo index used in synthesizing the input file names.
@@ -295,7 +295,7 @@
     center = 1.0 # Gain distribution center
     component = 0 # Component index for this simulation
     det_data = "signal" # Observation detdata key to apply the gain error to
-    enabled = false   # If True, this class instance is marked as enabled
+    enabled = false    # If True, this class instance is marked as enabled
     name = "sim_gscramble" # The 'name' of this class instance
     pattern = ".*" # Regex pattern to match against detector names. Only detectors that match the pattern are scrambled.
     realization = 0 # Realization index
@@ -341,7 +341,7 @@
     crdata_units = "unit W" # set the unities of the input amplitudes 
     crfile = "input_data/cosmic_ray_glitches.npz" # Path to the *.npz file encoding cosmic ray infos
     det_data = "signal" # Observation detdata key to inject the gain drift
-    enabled = false    # If True, this class instance is marked as enabled
+    enabled = false     # If True, this class instance is marked as enabled
     eventrate = 0.0015 # the expected event rate of hits in a detector
     include_common_mode = false # will include also common mode per pixel pair  if set to True
     inject_direct_hits = true # inject  direct hits as glitches in the TODs
