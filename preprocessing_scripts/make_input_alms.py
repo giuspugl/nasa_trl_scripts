@@ -7,8 +7,10 @@ from astropy import constants as   const
 import toml 
 import pysm3.units as u3
 import warnings
+import glob 
+import time 
+
 warnings.filterwarnings("ignore")
-from so_pysm_models import extragalactic 
 
 def b(nu):
     """
@@ -86,64 +88,68 @@ def Kcmb2Krj(nu, Tcmb=1.0, bandpass=None):
     )
 
 
-hwdir ='/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/hardware_config/' 
-dic_lb = toml.load(f'{hwdir}/litebirdms_hardware.toml')
-detectors  = [b for b in dic_lb['detectors'].keys()   ]  
 
-lmax=1024
-mmax=1024 
- 
+sim_dir = '/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/'
+hwdir =f'{sim_dir}/hardware/' 
+out_dir =f'{sim_dir}/sky_inputs_alm/' 
+temp_dir =f'{sim_dir}/sky_templates/' 
+bpass_dir=f'{sim_dir}/det_bandpasses/' 
 
+hwfiles= glob.glob(f'{hwdir}/*toml.gz') 
 nside=512
+lmax=1024 ; mmax=20
 
-galsky = pysm3.Sky(nside=nside, preset_strings=["s5","d9","a1","f1","co1"],output_unit='uK_RJ')
-tsz =extragalactic.WebSkySZ(nside=nside, sz_type='thermal' )
-ksz =extragalactic.WebSkySZ(nside=nside, sz_type='kinetic' )
-cib = extragalactic.WebSkyCIB(nside=nside)
-lens_cmb =hp.read_map(f"/global/cfs/cdirs/litebird/simulations/maps/post_ptep_inputs_20220522/websky_extragal/websky_lensed_cmb/CMB/sims_00.fits", field=None )
-#radio = hp.read_map 
-lens_cmb =hp.ud_grade(lens_cmb, nside_out=nside  ) *u3.uK_CMB 
-
-
-out_dir ="/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/sky_inputs_alm/" 
-
-
-
-for det in detectors : 
-    bandstring = (dic_lb['detectors'] [det] ['band'] )
-    fwhm = dic_lb['detectors'] [det] ['fwhm'] *u.arcmin 
+for hwfile in hwfiles: 
+    dic_lb = toml.load(hwfile)
+    
+    bandstring = [ k for k in dic_lb['bands'].keys()  ][0]
+    fwhm = dic_lb['bands'][bandstring]['fwhm'] *u.arcmin 
     b0 = dic_lb['bands'][bandstring]['center'] *u.GHz
     bw = dic_lb['bands'][bandstring]['bandwidth'] *u.GHz 
     band = pl.linspace(b0-bw/2, b0+bw/2, 16) 
     #read bandpasses from disc 
+    
     bandpass = np.ones_like(band.value)
-    print(det, b0,bw ,fwhm ) 
- 
-    galaxy  = galsky.get_emission(freq=band, weights= bandpass )
-    thermo_sz=  tsz.get_emission(freqs=band,weights=bandpass) 
+    
+    print( bandstring  )
+    #low complexity foregrounds 
+    # https://galsci.github.io/blog/2022/common-fiducial-sky/
+    sky = pysm3.Sky(nside=nside, preset_strings=["d9","s4","f1","a1","co1","c4","cib1", "tsz1", "ksz1", "rg1" ],output_unit='K_CMB')
+    skyT =sky.get_emission(freq=band, weights= bandpass )
+    skyT = hp.smoothing(skyT[0], lmax=lmax , fwhm = fwhm.to(u.rad).value ) 
+    
+    hp.write_map(f"{temp_dir}/template_map_T_{bandstring}_top-hat_bpass.fits", skyT, column_units='K_CMB' )
+    
+    detectors = (list(dic_lb['detectors'] .keys()  ))
+    bpasses = pl.load(f"{bpass_dir}/{bandstring}_cheby.npz")
+    for det in detectors :
+        start= time.perf_counter() 
+        
+        signals = sky.get_emission(freq=bpasses['freq_ghz'] , 
+                                   weights= bpasses[det]  ) 
+        alms = hp.map2alm(maps =signals ,lmax =lmax, mmax=mmax ) 
+        ### to avoid any issue with fwhm i consider alms convolved with 10arcmin <17.8 arcmin of the highest reso LB channel 
+        alms = hp.smoothalm( alms=alms ,fwhm= pl.radians(10/60.) ,lmax=lmax ,mmax=mmax ) 
+        almT = np.zeros_like(alms ) 
+        almT[0] = alms[0] 
+        almEB = np.zeros_like(alms ) 
+        almEB [1:] = alms[1:] 
+        almBE = np.zeros_like(alms ) 
+        almBE [2] = -alms[1] 
+        almBE [1] = alms[2]
 
-    kin_sz=  ksz.get_emission(freqs=band,weights=bandpass)   
-    cibmap=  cib.get_emission(freqs=band,weights=bandpass)
-    extra_gal = thermo_sz +kin_sz + cibmap #+radio 
-    conversion_factor = Krj2Kcmb(  nu=band, bandpass=bandpass ).value *u3.uK_CMB
+        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_T_{skT.unit}.fits" , alms =almT , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_EB_{skT.unit}.fits" , alms =almEB , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_BE_{skT.unit}.fits" , alms =almBE, lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        end= time.perf_counter() 
+        print(end-start)
+        
+    break
     
-    print(conversion_factor) 
-    coadd = lens_cmb +conversion_factor *(extra_gal.value + galaxy.value  )
-    alms = hp.map2alm(maps =coadd ,lmax =lmax, mmax=mmax ) 
-    
-    alms = hp.smoothalm( alms=alms ,fwhm=fwhm.to(u.rad).value  ,mmax=mmax ) 
-    almT = np.zeros_like(alms ) 
-    almT[0] = alms[0] 
-    almEB = np.zeros_like(alms ) 
-    almEB [1:] = alms[1:] 
-    almBE = np.zeros_like(alms ) 
-    almBE [2] = -alms[1] 
-    almBE [1] = alms[2]
-    
-    hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_T.fits" , alms =almT , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-    hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_EB.fits" , alms =almEB , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-    hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_BE.fits" , alms =almBE, lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-    
-    
-    
-    break 
+
+ 
+
+
+
+
+

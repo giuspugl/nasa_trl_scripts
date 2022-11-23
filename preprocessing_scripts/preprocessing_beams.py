@@ -9,26 +9,7 @@ import glob
 import toast 
 from toast import qarray as quat 
 import litebirdtask  as lbt 
-
-
-
-tele_plate_scale={"LFT": 0.0476, 
-        "MFT": 0.0875, 
-        "HFT": 0.135 } #deg/mm 
-
-
-beamdir = "/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/GRASP/"
-hwdir ='/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/hardware_config/' 
-levels_exec="/global/u1/g/giuspugl/software/planck-levelS/linux_gcc/bin/"
-hardware= lbt.Hardware ( f'{hwdir}/litebirdms_hardware.toml' )
-lb_bands = [b for b in hardware.data['bands'].keys()   ] 
-
-lmax=1024 ; mmax=140
-
-
-nphi = 1000 
-ntheta= 1001
-
+import time 
 
 def edit_Hiroaki_sims(file ):
     ### Old sims of Hiroaki show an ICOMP parameter set to -3 we modify that to ICOMP=3 
@@ -96,7 +77,6 @@ def make_stokes_beam_files (beamdir ) :
         theta,phi = get_coordinates_from_LFT_sims(graspfile)
         pos = graspfile.find(".grd") 
         stokesfile = (graspfile[:pos]+f"_fpcoord_{theta:.5f}_{phi:.5f}.fits" ) 
-        
         if "L3" in graspfile or "L4" in graspfile :
             continue 
             print(  "Editing header of beam maps  to make it compatible with GRASP2STOKES "  )
@@ -123,7 +103,7 @@ def make_stokes_beam_files (beamdir ) :
         os.system(f"{levels_exec}./grasp2stokes grasp2stokes.par >>log ")  
 
     for stringtele in ["MFT", "HFT"] : 
-        continue 
+        
         for graspfile in glob.glob(f'{beamdir}/{stringtele}/*_tp.grd') : 
             theta,phi = get_coordinates_from_MHFT_sims(graspfile, stringtele)
             pos = graspfile.find(".grd") 
@@ -173,11 +153,10 @@ def associate_grasp_beam (det, hw  ):
     detquat = detdic ['quat']
     band = detdic ['band']
     telesc= band[0] +"FT" 
-    
     det_coord =quat.to_position(np.float64(   detquat )     ) 
     grasp_coord, grasp_files  = get_coords_graspsims(band) 
     id_grasp = np.argmin(np.linalg.norm(grasp_coord - det_coord , axis=1) )
-    print(f"GRASP:{grasp_coord [id_grasp] } DET:{det_coord}" ) 
+    #print(f"GRASP:{grasp_coord [id_grasp] } DET:{det_coord}" ) 
     
     return grasp_files[id_grasp] ,   det_coord
 
@@ -322,43 +301,52 @@ def run_beam2alm (  detstring , normalize=True, split_TP= False  ):
         return blm 
 
 
-### firstly create stokes beam files 
+ 
+    
+    
+    
+
+
+tele_plate_scale={"LFT": 0.0476, 
+        "MFT": 0.0875, 
+        "HFT": 0.135 } #deg/mm 
+
+
+lmax=1024 ; mmax=20
+sim_dir="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims"
+hwdir =f'{sim_dir}/hardware/' 
+hwfiles= glob.glob(f'{hwdir}/*toml.gz') 
+
+levels_exec="/global/u1/g/giuspugl/software/planck-levelS/linux_gcc/bin/"
+nphi = 1000 
+ntheta= 1001
+beamdir = f"{sim_dir}/GRASP/"
 
 #make_stokes_beam_files(beamdir) 
-import time 
-for det in hardware.data['detectors'].keys() : 
-    if det[0] !="L":continue 
-    print(det) 
-    
-    start = time.perf_counter () 
-    file,   detcoords =  associate_grasp_beam(det, hardware   ) 
-    rotate_beam_map (detstring=det, inputfile=file , detcoordinates= detcoords) 
-    blmT, blmP  = run_beam2alm(  detstring=det, normalize =True ,  split_TP=True ) 
-    hp.write_alm(filename=f"expanded_beams/{det}_T.fits",alms= blmT, lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True  )
-    hp.write_alm(filename=f"expanded_beams/{det}_P.fits",alms= blmP   ,lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True )
-    os.system("rm /tmp/*.fits" )
-    end = time.perf_counter () 
-    #print(end-start )
-    
-    #break 
+hwfiles= glob.glob(f'{hwdir}/*toml.gz') 
+for hwfile in hwfiles : 
+    hardware= lbt.Hardware ( hwfile )
+    lb_bands = [b for b in hardware.data['bands'].keys()   ] [0]
+    for det in hardware.data['detectors'].keys() : 
+            start = time.perf_counter () 
+            band =hardware.data['detectors'][det]['band'] 
+            file,   detcoords =  associate_grasp_beam(det, hardware   ) 
+            rotate_beam_map (detstring=det, inputfile=file , detcoordinates= detcoords) 
+            blmT, blmP  = run_beam2alm(  detstring=det, normalize =True ,  split_TP=True ) 
 
-sksks
+            os.makedirs(f"/expanded_beams/{band}",exist_ok=True )
+            hp.write_alm(filename=f"{sim_dir}/expanded_beams/{band}/{det}_T.fits",alms= blmT, lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True  )
+            hp.write_alm(filename=f"{sim_dir}/expanded_beams/{band}/{det}_P.fits",alms= blmP   ,lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True )
+            os.system("rm /tmp/*.fits" )
+            end= time.perf_counter() 
+            print(end-start ) 
+            
+    break
 
-### associate detector w/ closest  GRASP sim 
-det='M05_023_QB_119B'
-file,   detcoords =  associate_grasp_beam(det, hardware   ) 
-## rotate beams according to the pixel  location   in the focalplane 
-rotate_beam_map (detstring=det, inputfile=file , detcoordinates= detcoords) 
-#extract sidelobes
-# expand beams 
-
-blmT, blmP  = run_beam2alm(  detstring=det, normalize =True ,  split_TP=True ) 
-hp.write_alm(filename=f"GRASP/{det}_T.fits",alms= blmT, lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True  )
-hp.write_alm(filename=f"GRASP/{det}_P.fits",alms= blmP   ,lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True )
-
-
-os.system("rm /tmp/*.fits" )
 
 
     
+    
+
+
     
