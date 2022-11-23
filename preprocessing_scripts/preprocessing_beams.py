@@ -327,21 +327,21 @@ hwfiles= glob.glob(f'{hwdir}/*toml.gz')
 for hwfile in hwfiles : 
     hardware= lbt.Hardware ( hwfile )
     lb_bands = [b for b in hardware.data['bands'].keys()   ] [0]
+    start = time.perf_counter () 
+
     for det in hardware.data['detectors'].keys() : 
-            start = time.perf_counter () 
             band =hardware.data['detectors'][det]['band'] 
             file,   detcoords =  associate_grasp_beam(det, hardware   ) 
             rotate_beam_map (detstring=det, inputfile=file , detcoordinates= detcoords) 
             blmT, blmP  = run_beam2alm(  detstring=det, normalize =True ,  split_TP=True ) 
 
-            os.makedirs(f"/expanded_beams/{band}",exist_ok=True )
+            os.makedirs(f"{sim_dir}/expanded_beams/{band}",exist_ok=True )
             hp.write_alm(filename=f"{sim_dir}/expanded_beams/{band}/{det}_T.fits",alms= blmT, lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True  )
             hp.write_alm(filename=f"{sim_dir}/expanded_beams/{band}/{det}_P.fits",alms= blmP   ,lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True )
             os.system("rm /tmp/*.fits" )
             end= time.perf_counter() 
-            print(end-start ) 
+    print(band, end-start ) 
             
-    break
 
 
 
