@@ -126,23 +126,20 @@ def make_stokes_beam_files (beamdir ) :
 
 def get_coords_graspsims(band ) :
     telescope= band[0]+"FT" 
+    print(band , telescope)
+    
     if telescope=="LFT":
         stokesfiles =glob.glob(f'{beamdir}/{telescope}/{band}/*.fits') 
-        coordref= np.zeros((len(stokesfiles),2) ) 
-        for i,f in enumerate(stokesfiles ): 
-            startpos= f.find("coord_")
-            endpos= f.find(".fits")
-            coordstring = (f[startpos+6:endpos].split("_") )
-            coordref[i ]  = np.float64(coordstring) 
-            
+        
     else:
         stokesfiles =glob.glob(f'{beamdir}/{telescope}/*.fits') 
-        coordref= np.zeros((len(stokesfiles),2) ) 
-        for i,f in enumerate(stokesfiles ): 
-            startpos= f.find("coord_")
-            endpos= f.find(".fits")
-            coordstring = (f[startpos+6:endpos].split("_") )
-            coordref[i ]  = np.float64(coordstring) 
+    print(len(stokesfiles) )
+    coordref= np.zeros((len(stokesfiles),2) ) 
+    for i,f in enumerate(stokesfiles ): 
+        startpos= f.find("coord_")
+        endpos= f.find(".fits")
+        coordstring = (f[startpos+6:endpos].split("_") )
+        coordref[i ]  = np.float64(coordstring) 
      
     return coordref, stokesfiles  
 
@@ -153,9 +150,13 @@ def associate_grasp_beam (det, hw  ):
     detquat = detdic ['quat']
     band = detdic ['band']
     telesc= band[0] +"FT" 
+
     det_coord =quat.to_position(np.float64(   detquat )     ) 
     grasp_coord, grasp_files  = get_coords_graspsims(band) 
-    id_grasp = np.argmin(np.linalg.norm(grasp_coord - det_coord , axis=1) )
+    try :
+        id_grasp = np.argmin(np.linalg.norm(grasp_coord - det_coord , axis=1) )
+    except ValueError: 
+        raise ValueError 
     #print(f"GRASP:{grasp_coord [id_grasp] } DET:{det_coord}" ) 
     
     return grasp_files[id_grasp] ,   det_coord
@@ -340,7 +341,7 @@ for hwfile in hwfiles :
             hp.write_alm(filename=f"{sim_dir}/expanded_beams/{band}/{det}_P.fits",alms= blmP   ,lmax= lmax  , mmax = mmax , mmax_in=mmax , overwrite=True )
             os.system("rm /tmp/*.fits" )
             end= time.perf_counter() 
-    print(band, end-start ) 
+    print( end-start ) 
             
 
 

@@ -9,7 +9,7 @@ import pysm3.units as u3
 import warnings
 import glob 
 import time 
-
+import os 
 warnings.filterwarnings("ignore")
 
 def b(nu):
@@ -94,7 +94,6 @@ hwdir =f'{sim_dir}/hardware/'
 out_dir =f'{sim_dir}/sky_inputs_alm/' 
 temp_dir =f'{sim_dir}/sky_templates/' 
 bpass_dir=f'{sim_dir}/det_bandpasses/' 
-
 hwfiles= glob.glob(f'{hwdir}/*toml.gz') 
 nside=512
 lmax=1024 ; mmax=20
@@ -112,24 +111,36 @@ for hwfile in hwfiles:
     bandpass = np.ones_like(band.value)
     
     print( bandstring  )
+    os.makedirs(f"{out_dir}/{bandstring}", exist_ok=True )
+    start= time.perf_counter() 
     #low complexity foregrounds 
-    # https://galsci.github.io/blog/2022/common-fiducial-sky/
+    # https://galsci.github.io/blog/2022/common-fiducial-sky/   
     sky = pysm3.Sky(nside=nside, preset_strings=["d9","s4","f1","a1","co1","c4","cib1", "tsz1", "ksz1", "rg1" ],output_unit='K_CMB')
-    skyT =sky.get_emission(freq=band, weights= bandpass )
-    skyT = hp.smoothing(skyT[0], lmax=lmax , fwhm = fwhm.to(u.rad).value ) 
-    
-    hp.write_map(f"{temp_dir}/template_map_T_{bandstring}_top-hat_bpass_K_CMB.fits", skyT, column_units='K_CMB' )
-    
+
+    if not os.path.exists( f"{temp_dir}/template_map_T_{bandstring}_top-hat_bpass_K_CMB.fits"): 
+
+        print("skipping template" )
+        skyT =sky.get_emission(freq=band, weights= bandpass )
+        skyT = hp.smoothing(skyT[0], lmax=lmax , fwhm = fwhm.to(u.rad).value ) 
+
+        hp.write_map(f"{temp_dir}/template_map_T_{bandstring}_top-hat_bpass_K_CMB.fits", skyT, column_units='K_CMB'  )
+
     detectors = (list(dic_lb['detectors'] .keys()  ))
     bpasses = pl.load(f"{bpass_dir}/{bandstring}_cheby.npz")
     for det in detectors :
-        start= time.perf_counter() 
+        almTfile =f"{out_dir}/{bandstring}/sky_alm_{det}_T_K_CMB.fits"
+        almEBfile =f"{out_dir}/{bandstring}/sky_alm_{det}_EB_K_CMB.fits"
+        almBEfile =f"{out_dir}/{bandstring}/sky_alm_{det}_BE_K_CMB.fits"
+        if  (os.path.exists(almTfile) and  os.path.exists(almEBfile) and os.path.exists(almBEfile)) :
+            print(f"skipping {det}" )
+
+            continue 
         
-        signals = sky.get_emission(freq=bpasses['freq_ghz'] , 
+        signals = sky.get_emission(freq=bpasses['freq_ghz']*u.GHz , 
                                    weights= bpasses[det]  ) 
         alms = hp.map2alm(maps =signals ,lmax =lmax, mmax=mmax ) 
-        ### to avoid any issue with fwhm i consider alms convolved with 10arcmin <17.8 arcmin of the highest reso LB channel 
-        alms = hp.smoothalm( alms=alms ,fwhm= pl.radians(10/60.) ,lmax=lmax ,mmax=mmax ) 
+        ### to avoid any issue with  fwhm, i consider all sky alms convolved with 10arcmin <17.8 arcmin of the highest reso LB channel 
+        alms = hp.smoothalm( alms=alms ,fwhm= pl.radians(10/60.)  ,mmax=mmax ) 
         almT = np.zeros_like(alms ) 
         almT[0] = alms[0] 
         almEB = np.zeros_like(alms ) 
@@ -138,13 +149,14 @@ for hwfile in hwfiles:
         almBE [2] = -alms[1] 
         almBE [1] = alms[2]
 
-        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_T_K_CMB.fits" , alms =almT , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_EB_K_CMB.fits" , alms =almEB , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_BE_K_CMB.fits" , alms =almBE, lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-        end= time.perf_counter() 
-        print(end-start)
+        hp.write_alm(filename=almTfile  , alms =almT , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        hp.write_alm(filename=almEBfile , alms =almEB , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        hp.write_alm(filename=almBEfile , alms =almBE, lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+    end= time.perf_counter() 
+    print(end-start)
         
-    break
+        
+    #break
     
 
  
