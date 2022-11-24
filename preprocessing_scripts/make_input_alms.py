@@ -118,7 +118,7 @@ for hwfile in hwfiles:
     skyT =sky.get_emission(freq=band, weights= bandpass )
     skyT = hp.smoothing(skyT[0], lmax=lmax , fwhm = fwhm.to(u.rad).value ) 
     
-    hp.write_map(f"{temp_dir}/template_map_T_{bandstring}_top-hat_bpass.fits", skyT, column_units='K_CMB' )
+    hp.write_map(f"{temp_dir}/template_map_T_{bandstring}_top-hat_bpass_K_CMB.fits", skyT, column_units='K_CMB' )
     
     detectors = (list(dic_lb['detectors'] .keys()  ))
     bpasses = pl.load(f"{bpass_dir}/{bandstring}_cheby.npz")
@@ -138,9 +138,9 @@ for hwfile in hwfiles:
         almBE [2] = -alms[1] 
         almBE [1] = alms[2]
 
-        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_T_{skT.unit}.fits" , alms =almT , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_EB_{skT.unit}.fits" , alms =almEB , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_BE_{skT.unit}.fits" , alms =almBE, lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_T_K_CMB.fits" , alms =almT , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_EB_K_CMB.fits" , alms =almEB , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
+        hp.write_alm(filename=f"{out_dir}/sky_alm_{det}_BE_K_CMB.fits" , alms =almBE, lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
         end= time.perf_counter() 
         print(end-start)
         
