@@ -27,7 +27,7 @@ def make_script (args):
         telescope= list(dic_lb['telescopes'].keys())[0] 
         band= list(dic_lb ['bands'].keys() )[0]
         print(f"script for {band} " )
-        ftmp  = open(f'run.slrm','r')
+        ftmp  = open(f'./slurm/run.slrm','r')
         scriptfile = open(f'{sim_dir}/scripts/{band}.slrm', 'w')
         
         for line in ftmp.readlines():
@@ -42,15 +42,18 @@ def make_script (args):
             txtfile.write( f'templatefile="{temp_dir}/template_map_T_{band}_top-hat_bpass_K_CMB.fits" \n' )
             txtfile.write( f'skyfile="{alm_dir}/{band}/'+'sky_alm_{detector}.fits" \n' )
             txtfile.write( f'hardware="{hw_dir}/{band}.hdf5" \n' )
+            txtfile.write( f'pyscript="{sim_dir}/scripts/nasa_trl_scripts/toast_scripts/toast_sim_lb.py" \n' )
+            txtfile.write( f'config="{sim_dir}/scripts/nasa_trl_scripts/toast_scripts/config_log.toml" \n' )
+            txtfile.write( f'hardware="{hw_dir}/{band}.hdf5" \n' )
 
             txtfile.write( 'LOG_OUT="${outdir}/'+f'run_{band}_'+'${SLURM_JOB_ID}"  \n' )
  
             command="""
 echo Calling srun at $(date) \n \n 
-srun -n $ntask -N $nnode   nasa_trl_scripts/toast_scripts/toast_sim_lb.py   --out_dir   ${outdir}  \
+srun -n $ntask -N $nnode   ${pyscript}   --out_dir   ${outdir}  \
 --schedule ${LBSIM}/input_data/schedule_3yrs.ecsv \
 --focalplane  ${hardwre}  \
---config nasa_trl_scripts/toast_scripts/config_log.toml \
+--config ${config} \
 --sim_satellite.hwp_rpm ${hwprpm} \
 --beam_convolution.beam_file ${blmfile} --beam_convolution.sky_file ${skyfile}\
 --scan_temp.file ${templatefile} \
