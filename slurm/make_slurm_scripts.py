@@ -46,7 +46,7 @@ def make_script (args):
             txtfile.write( f'config="{sim_dir}/scripts/nasa_trl_scripts/toast_scripts/config_log.toml" \n' )
             txtfile.write( f'hardware="{hw_dir}/{band}.hdf5" \n' )
 
-            txtfile.write( 'LOG_OUT="${outdir}/'+f'run_{band}_'+'${SLURM_JOB_ID}"  \n' )
+            txtfile.write( f'LOG_OUT="{sim_dir}/logs/run_{band}_'+'${SLURM_JOB_ID}"  \n' )
  
             command="""
 echo Calling srun at $(date) \n \n 
@@ -55,7 +55,7 @@ srun -n $ntask -N $nnode   ${pyscript}   --out_dir   ${outdir}  \
 --focalplane  ${hardware}  \
 --config ${config} \
 --sim_satellite.hwp_rpm ${hwprpm} \
---beam_convolution.beam_file ${blmfile} --beam_convolution.sky_file ${skyfile}\
+--beam_convolution.beam_file ${blmfile} --beam_convolution.sky_file ${skyfile} \
 --scan_temp.file ${templatefile} \
 --mapmaker.output_dir ${outdir} --mapmaker.convergence 1e-12 \
 --calibrator.convergence 1e-12 \
