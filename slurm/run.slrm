@@ -1,0 +1,17 @@
+#!/bin/bash -l
+
+#SBATCH --partition=regular
+#SBATCH --constraint=cpu
+#SBATCH --account=mp107
+#SBATCH --nodes=12
+#SBATCH --time=04:00:00
+#SBATCH --job-name=TRL
+ 
+
+ulimit -c unlimited
+let nnode=${SLURM_JOB_NUM_NODES}
+
+
+
+
+ 
