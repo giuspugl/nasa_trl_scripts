@@ -354,7 +354,7 @@
     API = 0 # Internal interface version for this operator
     conversion_factor = "5.73e12 K/W" # factor to convert the cosmic ray signal (usually Watts) into temperature units
     crdata_units = "unit W" # set the unities of the input amplitudes 
-    crfile = "input_data/cosmic_ray_glitches.npz" # Path to the *.npz file encoding cosmic ray infos
+    crfile = "/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/input_data/cosmic_ray_glitches.npz" # Path to the *.npz file encoding cosmic ray infos
     det_data = "signal" # Observation detdata key to inject the gain drift
     enabled = true     # If True, this class instance is marked as enabled
     eventrate = 0.0015 # the expected event rate of hits in a detector

@@ -52,15 +52,14 @@ def make_script (args):
 echo Calling srun at $(date) \n \n 
 srun -n $ntask -N $nnode   ${pyscript}   --out_dir   ${outdir}  \
 --schedule ${LBSIM}/input_data/schedule_3yrs.ecsv \
---focalplane  ${hardwre}  \
+--focalplane  ${hardware}  \
 --config ${config} \
 --sim_satellite.hwp_rpm ${hwprpm} \
 --beam_convolution.beam_file ${blmfile} --beam_convolution.sky_file ${skyfile}\
 --scan_temp.file ${templatefile} \
 --mapmaker.output_dir ${outdir} --mapmaker.convergence 1e-12 \
 --calibrator.convergence 1e-12 \
---job_group_size 3 >> ${LOG_OUT} 2>&1 \n 
-            """
+--job_group_size 3 >> ${LOG_OUT} 2>&1 \n"""
     
 
             txtfile.write(command )
