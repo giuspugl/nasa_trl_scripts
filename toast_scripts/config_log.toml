@@ -7,13 +7,13 @@
     API = 0 # Internal interface version for this operator
     boresight = "boresight_radec" # Observation shared key for boresight
     det_data = "signal" # Observation detdata key to initialize
-    det_data_units = "unit uK" # Output units if creating detector data
+    det_data_units = "unit K" # Output units if creating detector data
     det_flags = "flags" # Observation detdata key for flags to initialize
     detset_key = "pixel" # If specified, use this column of the focalplane detector_data to group detectors
     distribute_time = false # Distribute observation data along the time axis rather than detector axis
     enabled = true # If True, this class instance is marked as enabled
     hwp_angle = "hwp_angle" # Observation shared key for HWP angle
-    hwp_rpm = "46" # The rate (in RPM) of the HWP rotation
+    hwp_rpm = 46 # The rate (in RPM) of the HWP rotation
     hwp_step = "None" # For stepped HWP, the angle of each step
     hwp_step_time = "None" # For stepped HWP, the time between steps
     name = "sim_satellite" # The 'name' of this class instance
@@ -36,10 +36,10 @@
 [operators.scan_temp]
     class = "toast.ops.scan_healpix.ScanHealpixMap"
     API = 0 # Internal interface version for this operator
-    det_data = "templateI" # Observation detdata key for accumulating output
-    det_data_units = "unit uK" # Output units if creating detector data
+    det_data = "template" # Observation detdata key for accumulating output
+    det_data_units = "unit K" # Output units if creating detector data
     enabled = true # If True, this class instance is marked as enabled
-    file = "/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/map.fits" # Path to healpix FITS file
+    file ="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/sky_templates/template_map_T_L4-140_top-hat_bpass_K_CMB.fits" # Path to healpix FITS file
     name = "scan_temp" # The 'name' of this class instance
     pixel_dist = "pixel_dist" # The Data key where the PixelDistribution object is located
     pixel_pointing = "None" # This must be an instance of a pixel pointing operator
@@ -52,9 +52,9 @@
 [operators.scan_map]
     class = "toast.ops.scan_healpix.ScanHealpixMap"
     API = 0 # Internal interface version for this operator
-    det_data = "beamconvolved" # Observation detdata key for accumulating output
-    enabled = true  # If True, this class instance is marked as enabled
-    file = "/global/cscratch1/sd/giuspugl/nasa_trl_demo_sims/map.fits" # Path to healpix FITS file
+    det_data = "signal" # Observation detdata key for accumulating output
+    enabled = false   # If True, this class instance is marked as enabled
+    file = "/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/map_L4-140.fits" # Path to healpix FITS file
     name = "scan_map" # The 'name' of this class instance
     pixel_dist = "pixel_dist" # The Data key where the PixelDistribution object is located
     pixel_pointing = "None" # This must be an instance of a pixel pointing operator
@@ -72,8 +72,8 @@
     API = 0 # Internal interface version for this operator
     component = 0 # The noise component index
     det_data = "signal" # Observation detdata key for accumulating noise timestreams
-    det_data_units = "unit uK" # Desired output units of the timestream
-    enabled = true     # If True, this class instance is marked as enabled
+    det_data_units = "unit K" # Desired output units of the timestream
+    enabled = true       # If True, this class instance is marked as enabled
     name = "sim_noise" # The 'name' of this class instance
     noise_model = "noise_model" # Observation key containing the noise model
     realization = 0 # The noise realization index
@@ -101,7 +101,7 @@
     detector_pointing = "None" # Operator that translates boresight pointing into detector frame
     enabled = true # If True, this class instance is marked as enabled
     name = "pixels" # The 'name' of this class instance
-    nest = true # If True, use NESTED ordering instead of RING
+    nest = false # If True, use NESTED ordering instead of RING
     nside = 512 # The NSIDE resolution
     nside_submap = 16 # The NSIDE of the submap resolution
     pixels = "pixels" # Observation detdata key for output pixel indices
@@ -116,7 +116,7 @@
     cal = "None" # The observation key with a dictionary of pointing weight calibration for each det
     detector_pointing = "None" # Operator that translates boresight pointing into detector frame
     enabled = true # If True, this class instance is marked as enabled
-    hwp_angle = "None" # Observation shared key for HWP angle
+    hwp_angle = "hwp_angle" # Observation shared key for HWP angle
     mode = "IQU" # The Stokes weights to generate (I or IQU)
     name = "weights" # The 'name' of this class instance
     quats = "None" # Observation detdata key for output quaternions
@@ -125,24 +125,38 @@
     view = "None" # Use this view of the data in all observations
     weights = "weights" # Observation detdata key for output weights
     
+[operators.weights_temp]
+    class = "toast.ops.stokes_weights.StokesWeights"
+    API = 0 # Internal interface version for this operator
+    cal = "None" # The observation key with a dictionary of pointing weight calibration for each det
+    detector_pointing = "None" # Operator that translates boresight pointing into detector frame
+    enabled = true # If True, this class instance is marked as enabled
+    hwp_angle = "hwp_angle" # Observation shared key for HWP angle
+    mode = "I" # The Stokes weights to generate (I or IQU)
+    name = "weights_temp" # The 'name' of this class instance
+    quats = "None" # Observation detdata key for output quaternions
+    single_precision = false # If True, use 32bit float in output
+    use_python = false # If True, use python implementation
+    view = "None" # Use this view of the data in all observations
+    weights = "weights_temp" # Observation detdata key for output weights    
 [operators.beam_convolution]
     class = "toast.ops.conviqt.SimTEBConviqt"
     API = 0 # Internal interface version for this operator
     apply_flags = false # Only synthesize signal for unflagged samples.
     #beam_file = "expanded_beams/{detector}.fits" # File containing the beam a_lm expansion.  Tag {detector} will be replaced with the detector name.
-    beam_file="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/L00_000_QA_050T.fits" 
+    beam_file="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/expanded_beams/L4-140/{detector}.fits" 
     calibrate = true # Calibrate intensity to 1.0, rather than (1 + epsilon) / 2. Calibrate has no effect if the beam is found to be normalized rather than scaled with the leakage factor.
     comm = "None" # MPI communicator to use for the convolution. libConviqt does not work without MPI.
-    det_data = "beamconvolved" # Observation detdata key for accumulating convolved timestreams
+    det_data = "signal" # Observation detdata key for accumulating convolved timestreams
     det_flag_mask = 1 # Bit mask value for optional detector flagging
     det_flags = "flags" # Observation detdata key for flags to use
     detector_pointing = "None" # Operator that translates boresight pointing into detector frame
-    beammmax = 140 # Beam maximum m.  Actual resolution in the Healpix FITS file may differ. If not set, will use the maximum expansion order from file. 
+    beammmax = 20# Beam maximum m.  Actual resolution in the Healpix FITS file may differ. If not set, will use the maximum expansion order from file. 
     lmax = 1024 # Maximum ell (and m).  Actual resolution in the Healpix FITS file may differ.  If not set, will use the maximum expansion order from file.
     dxx = false # The beam frame is either Dxx or Pxx. Pxx includes the rotation to polarization sensitive basis, Dxx does not. When Dxx=True, detector orientation from attitude quaternions is corrected for the polarization angle.
-    enabled = false    # If True, this class instance is marked as enabled
-    fwhm = "58.5 arcmin" # Width of a symmetric gaussian beam already present in the skyfile (will be deconvolved away).
-    hwp_angle = "None" # Observation shared key for HWP angle
+    enabled = false     # If True, this class instance is marked as enabled
+    fwhm = "10 arcmin" # Width of a symmetric gaussian beam already present in the skyfile (will be deconvolved away).
+    hwp_angle = "hwp_angle" # Observation shared key for HWP angle
     mc = "None" # Monte Carlo index used in synthesizing the input file names.
     name = "beam_convolution" # The 'name' of this class instance
     normalize_beam = false # Normalize beam to have unit response to temperature monopole.
@@ -152,7 +166,7 @@
     remove_monopole = false # Suppress the temperature monopole in sky_file.
     shared_flag_mask = 1 # Bit mask value for optional flagging
     shared_flags = "flags" # Observation shared key for telescope flags to use
-    sky_file ="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/sky_alm_L00_000_QA_050T.fits" # File containing the sky a_lm expansion.  Tag {detector} will be replaced with the detector name
+    sky_file ="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/sky_inputs_alm/L4-140/sky_alm_{detector}.fits" # File containing the sky a_lm expansion.  Tag {detector} will be replaced with the detector name
     verbosity = 0 # 
     view = "None" # Use this view of the data in all observations
     [operators.beam_convolution.beam_file_dict] # Dictionary of files containing the beam a_lm expansions. An entry for each detector name must be present. If provided, supersedes `beam_file`.
@@ -200,7 +214,7 @@
     class = "toast.ops.mapmaker.MapMaker"
     API = 0 # Internal interface version for this operator
     binning = "None" # Binning operator used for solving template amplitudes
-    convergence = 1e0 #Relative convergence limit
+    convergence = 1e-12 #Relative convergence limit
     det_data = "signal" # Observation detdata key for the timestream data
     enabled = true # If True, this class instance is marked as enabled
     iter_max = 100 # Maximum number of iterations
@@ -237,7 +251,7 @@
     binning = "None" # Binning operator used for solving template amplitudes
     convergence = 1e-12 # Relative convergence limit
     det_data = "signal" # Observation detdata key for the timestream data
-    enabled = false  # If True, this class instance is marked as enabled
+    enabled = false    # If True, this class instance is marked as enabled
     iter_max = 100 # Maximum number of iterations
     iter_min = 3 # Minimum number of iterations
     keep_solver_products = false # If True, keep the map domain solver products in data
@@ -258,7 +272,7 @@
     detector_pointing = "None" # Operator that translates boresight pointing into detector frame
     enabled = false # If True, this class instance is marked as enabled
     name = "pixels_final" # The 'name' of this class instance
-    nest = true # If True, use NESTED ordering instead of RING
+    nest = false  # If True, use NESTED ordering instead of RING
     nside = 512 # The NSIDE resolution
     nside_submap = 16 # The NSIDE of the submap resolution
     pixels = "pixels" # Observation detdata key for output pixel indices
@@ -273,7 +287,7 @@
     API = 0 # Internal interface version for this operator
     det_data = "signal" # Observation detdata key for the timestream data
     detector_ordering = "random" # Initialize Crosstalk matrix with detector ordering: `random, gap,constant` default `random` 
-    enabled = false   # If True, this class instance is marked as enabled
+    enabled = true   # If True, this class instance is marked as enabled
     name = "sim_crosstalk" # The 'name' of this class instance
     realization = 0 # integer to set a different random seed 
     view = "None" # Use this view of the data in all observations
@@ -283,7 +297,7 @@
     class = "toast.ops.sim_crosstalk.MitigateCrossTalk"
     API = 0 # Internal interface version for this operator
     det_data = "signal" # Observation detdata key for the timestream data
-    enabled =   false  # If True, this class instance is marked as enabled
+    enabled =   true  # If True, this class instance is marked as enabled
     error_coefficients = 0.001 # relative amplitude to simulate crosstalk errors on the inverse matrix 
     name = "mitigate_crosstalk" # The 'name' of this class instance
     realization = 0 # integer to set a different random seed 
@@ -296,7 +310,7 @@
     center = 1.0 # Gain distribution center
     component = 0 # Component index for this simulation
     det_data = "signal" # Observation detdata key to apply the gain error to
-    enabled = false    # If True, this class instance is marked as enabled
+    enabled = true    # If True, this class instance is marked as enabled
     name = "sim_gscramble" # The 'name' of this class instance
     pattern = ".*" # Regex pattern to match against detector names. Only detectors that match the pattern are scrambled.
     realization = 0 # Realization index
@@ -309,7 +323,7 @@
     cutoff_freq = "2.00000000000000e-01 mHz" # cutoff  frequency to simulate a slow  drift (assumed < sampling rate)
     det_data = "signal" # Observation detdata key to inject the gain drift
     drift_mode = "slow_drift" # a string from [linear_drift, thermal_drift, slow_drift] to set the way the drift is modelled
-    enabled = false     # If True, this class instance is marked as enabled
+    enabled = true     # If True, this class instance is marked as enabled
     fknee_drift = "2.00000000000000e+01 mHz" # fknee of the drift signal
     focalplane_group = "wafer" # focalplane table column to use for grouping detectors: can be any string like "wafer", "pixel"
     include_common_mode = false # If True, inject a common drift to all the local detector group 
@@ -324,13 +338,13 @@
     det_data = "signal" # Observation detdata key to inject the gain drift
     detector_mismatch = 0.1 # mismatch between detectors for `thermal_drift` and `slow_drift` ranging from 0 to 1. Default value implies no common mode injected
     drift_mode = "thermal_drift" # a string from [linear_drift, thermal_drift, slow_drift] to set the way the drift is modelled
-    enabled = false      # If True, this class instance is marked as enabled
+    enabled = true      # If True, this class instance is marked as enabled
     fknee_drift = " 1 Hz" # as in the PTEP 
     focalplane_Tbath = "100 mK" # temperature of the focalplane for `thermal_drift` 
     focalplane_group = "wafer" # focalplane table column to use for grouping detectors: can be any string like "wafer", "pixel"
     include_common_mode = true  # If True, inject a common drift to all the local detector group 
     name = "sim_thermdrifts" # The 'name' of this class instance
-    thermal_fluctuation_amplitude = "1.00000000000000e+00 uK" # Amplitude of thermal fluctuation for `thermal_drift` in  Kelvin units
+    thermal_fluctuation_amplitude = "1.00 uK" # Amplitude of thermal fluctuation for `thermal_drift` in  Kelvin units
     
     
 
@@ -338,11 +352,11 @@
 [operators.sim_cosmicrays]
     class = "toast.ops.sim_cosmic_rays.InjectCosmicRays"
     API = 0 # Internal interface version for this operator
-    conversion_factor = "5.73e18 uK/W" # factor to convert the cosmic ray signal (usually Watts) into temperature units
+    conversion_factor = "5.73e12 K/W" # factor to convert the cosmic ray signal (usually Watts) into temperature units
     crdata_units = "unit W" # set the unities of the input amplitudes 
     crfile = "input_data/cosmic_ray_glitches.npz" # Path to the *.npz file encoding cosmic ray infos
     det_data = "signal" # Observation detdata key to inject the gain drift
-    enabled = false     # If True, this class instance is marked as enabled
+    enabled = true     # If True, this class instance is marked as enabled
     eventrate = 0.0015 # the expected event rate of hits in a detector
     include_common_mode = false # will include also common mode per pixel pair  if set to True
     inject_direct_hits = true # inject  direct hits as glitches in the TODs
@@ -352,9 +366,9 @@
 [operators.convolve_time_constant]
     class = "toast.ops.time_constant.TimeConstant"
     API = 0 # Internal interface version for this operator
-    deconvolve = false  # Deconvolve the time constant instead.
+    deconvolve = true  # Deconvolve the time constant instead.
     det_data = "signal" # Observation detdata key apply filtering to
-    enabled = false   # If True, this class instance is marked as enabled
+    enabled = true   # If True, this class instance is marked as enabled
     name = "convolve_time_constant" # The 'name' of this class instance
     realization = 0 # Realization ID, only used if tau_sigma is nonzero
     tau = "1 ms" # Time constant to apply to all detectors.  Overrides `tau_name`
@@ -364,9 +378,9 @@
 [operators.deconvolve_time_constant]
     class = "toast.ops.time_constant.TimeConstant"
     API = 0 # Internal interface version for this operator
-    deconvolve = false # Deconvolve the time constant instead.
+    deconvolve = true # Deconvolve the time constant instead.
     det_data = "signal" # Observation detdata key apply filtering to
-    enabled = false # If True, this class instance is marked as enabled
+    enabled = true # If True, this class instance is marked as enabled
     name = "deconvolve_time_constant" # The 'name' of this class instance
     realization = 0 # Realization ID, only used if tau_sigma is nonzero
     tau = "1 ms" # Time constant to apply to all detectors.  Overrides `tau_name`
@@ -399,13 +413,13 @@
     class = "toast.templates.gaintemplate.GainTemplate"
     data = "None" # This must be an instance of a Data class (or None)
     det_data = "signal" # Observation detdata key for the timestream data
-    det_data_units = "unit uK" # Desired timestream units
+    det_data_units = "unit K" # Desired timestream units
     det_flag_mask = 1 # Bit mask value for solver flags
     det_flags = "flags" # Observation detdata key for solver flags to use
     enabled = true         # If True, this class instance is marked as enabled
     name = "gain_amplitudes" # The 'name' of this class instance
     noise_model = "None" # Observation key containing the   noise model 
-    order = 0 # The order of Legendre polynomials to fit the gain amplitudes 
+    order = 4 # The order of Legendre polynomials to fit the gain amplitudes 
     template_name = "template" # detdata key encoding the signal estimate to fit the gain amplitudes
     use_accel = false # If True, use the accelerator
     view = "None" # Use this view of the data in all observations

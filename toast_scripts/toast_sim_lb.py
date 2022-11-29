@@ -175,6 +175,7 @@ def simulate_data(job, toast_comm, telescope, schedule):
     # operator, and each binning operator requires a pointing matrix operator.
     ops.pixels.detector_pointing = ops.det_pointing
     ops.weights.detector_pointing = ops.det_pointing
+    ops.weights_temp.detector_pointing = ops.det_pointing
     ops.weights.hwp_angle = ops.sim_satellite.hwp_angle
     ops.pixels_final.detector_pointing = ops.det_pointing
 
@@ -206,47 +207,30 @@ def simulate_data(job, toast_comm, telescope, schedule):
     
     ops.sim_dipole.apply(data) 
     log.info_rank("Scan  dipole  signal ", comm=world_comm, timer=timer)
-    
-    
-    ops.scan_map.pixel_dist = ops.binner_final.pixel_dist
-    ops.scan_map.pixel_pointing = ops.pixels_final
-    ops.scan_map.stokes_weights = ops.weights
-    ops.scan_map.save_pointing = use_full_pointing(job)
-    ops.scan_map.apply(data)
-    #import pdb; pdb.set_trace() 
-    log.info_rank("Scan sky signal ", comm=world_comm, timer=timer)
-    
-    
- 
     # scan the template 
     
 
     ops.scan_temp.pixel_dist = ops.binner_final.pixel_dist
     ops.scan_temp.pixel_pointing = ops.pixels_final
-    ops.scan_temp.stokes_weights = ops.weights
+    ops.scan_temp.stokes_weights = ops.weights_temp # we scan intensity map -only 
     ops.scan_temp.save_pointing = use_full_pointing(job)
     ops.scan_temp.apply(data)
     log.info_rank("Scan  template signal ", comm=world_comm, timer=timer)
     
+    ops.scan_map.pixel_dist = ops.binner_final.pixel_dist
+    ops.scan_map.pixel_pointing = ops.pixels_final
+    ops.scan_map.stokes_weights = ops.weights
+    ops.scan_map.save_pointing = use_full_pointing(job)
+    
+    ops.scan_map.apply(data)
+    log.info_rank("Scan sky signal ", comm=world_comm, timer=timer)
     ops.beam_convolution.detector_pointing= ops.det_pointing 
     ops.beam_convolution.comm= world_comm
-    ops.beam_convolution.beammmax = 140  
-    
+ 
     ops.beam_convolution.apply(data)
     
     log.info_rank("sky signal convolved w/ beam in", comm=world_comm, timer=timer)
-    
-    ops.add_data.first =  'template'
-    ops.add_data.second='templateI' 
-    ops.add_data.result='template' 
-    ops.add_data.apply(data)
-    
-    ops.add_data.first =  'beamconvolved'
-    ops.add_data.second='signal' 
-    ops.add_data.result='signal' 
-    ops.add_data.apply(data)
-    import pbd ; pdb.set_trace() 
-    
+
     # Apply a time constant
 
     ops.convolve_time_constant.apply(data)
@@ -316,21 +300,16 @@ def reduce_data(job, args, data):
     ops.binner_final.noise_model = ops.default_model.noise_model
     ops.calibrator.binning = ops.binner
     ops.calibrator.template_matrix = toast.ops.TemplateMatrix(templates=[tmpls.gain_amplitudes])
+    ops.calibrator.apply(data) 
     
-    ops.calibrator.map_binning = ops.binner_final
-    ops.calibrator.det_data = ops.sim_noise.det_data
-    ops.calibrator.output_dir = args.out_dir
+    log.info_rank("Finished calibrating", comm=world_comm, timer=timer)
     
     ops.mapmaker.binning = ops.binner
     ops.mapmaker.template_matrix = toast.ops.TemplateMatrix(templates=[tmpls.baselines])
     ops.mapmaker.map_binning = ops.binner_final
-    ops.mapmaker.det_data = ops.sim_noise.det_data
     ops.mapmaker.output_dir = args.out_dir
    
-    
-    ops.calibrator.apply(data) 
-    
-    log.info_rank("Finished calibrating", comm=world_comm, timer=timer)
+
     ops.mapmaker.apply(data)
     log.info_rank("Finished map-making in", comm=world_comm, timer=timer)
 
@@ -379,6 +358,7 @@ def main():
         toast.ops.PointingDetectorSimple(name="det_pointing"),
         toast.ops.PixelsHealpix(name="pixels"),
         toast.ops.StokesWeights(name="weights" ),
+        toast.ops.StokesWeights(name="weights_temp" ),
         toast.ops.TimeConstant(
             name="deconvolve_time_constant" ),
         toast.ops.SaveHDF5(name="save_hdf5" ),
