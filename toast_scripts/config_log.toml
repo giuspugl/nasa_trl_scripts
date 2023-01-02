@@ -84,7 +84,7 @@
     class = "toast.ops.pointing_detector.PointingDetectorSimple"
     API = 0 # Internal interface version for this operator
     boresight = "boresight_radec" # Observation shared key for boresight
-    coord_in = "G" # The input boresight coordinate system ('C', 'E', 'G')
+    coord_in = "C" # The input boresight coordinate system ('C', 'E', 'G')
     coord_out = "G" # The output coordinate system ('C', 'E', 'G')
     enabled = true # If True, this class instance is marked as enabled
     name = "det_pointing" # The 'name' of this class instance
@@ -143,8 +143,7 @@
     class = "toast.ops.conviqt.SimTEBConviqt"
     API = 0 # Internal interface version for this operator
     apply_flags = false # Only synthesize signal for unflagged samples.
-    #beam_file = "expanded_beams/{detector}.fits" # File containing the beam a_lm expansion.  Tag {detector} will be replaced with the detector name.
-    beam_file="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/expanded_beams/L4-140/{detector}.fits" 
+    beam_file="" 
     calibrate = true # Calibrate intensity to 1.0, rather than (1 + epsilon) / 2. Calibrate has no effect if the beam is found to be normalized rather than scaled with the leakage factor.
     comm = "None" # MPI communicator to use for the convolution. libConviqt does not work without MPI.
     det_data = "signal" # Observation detdata key for accumulating convolved timestreams
@@ -154,7 +153,7 @@
     beammmax = 20# Beam maximum m.  Actual resolution in the Healpix FITS file may differ. If not set, will use the maximum expansion order from file. 
     lmax = 1024 # Maximum ell (and m).  Actual resolution in the Healpix FITS file may differ.  If not set, will use the maximum expansion order from file.
     dxx = false # The beam frame is either Dxx or Pxx. Pxx includes the rotation to polarization sensitive basis, Dxx does not. When Dxx=True, detector orientation from attitude quaternions is corrected for the polarization angle.
-    enabled = false     # If True, this class instance is marked as enabled
+    enabled = true     # If True, this class instance is marked as enabled
     fwhm = "10 arcmin" # Width of a symmetric gaussian beam already present in the skyfile (will be deconvolved away).
     hwp_angle = "hwp_angle" # Observation shared key for HWP angle
     mc = "None" # Monte Carlo index used in synthesizing the input file names.
@@ -166,7 +165,7 @@
     remove_monopole = false # Suppress the temperature monopole in sky_file.
     shared_flag_mask = 1 # Bit mask value for optional flagging
     shared_flags = "flags" # Observation shared key for telescope flags to use
-    sky_file ="/global/cfs/cdirs/litebird/simulations/TOAST_nasa_trl_sims/sky_inputs_alm/L4-140/sky_alm_{detector}.fits" # File containing the sky a_lm expansion.  Tag {detector} will be replaced with the detector name
+    sky_file ="" # File containing the sky a_lm expansion.  Tag {detector} will be replaced with the detector name
     verbosity = 0 # 
     view = "None" # Use this view of the data in all observations
     [operators.beam_convolution.beam_file_dict] # Dictionary of files containing the beam a_lm expansions. An entry for each detector name must be present. If provided, supersedes `beam_file`.

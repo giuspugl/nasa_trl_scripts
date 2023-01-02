@@ -1,15 +1,48 @@
-#!/bin/bash -l
-
-#SBATCH --partition=regular
+#!/bin/bash
+#SBATCH --qos=regular
+#SBATCH --time=04:00:00
+#SBATCH --nodes=18
 #SBATCH --constraint=cpu
 #SBATCH --account=mp107
-#SBATCH --nodes=12
-#SBATCH --time=04:00:00
-#SBATCH --job-name=TRL
- 
+#SBATCH --licenses=SCRATCH
+#SBATCH --job-name=NASA-TRL-L2-050
+
 
 ulimit -c unlimited
-let nnode=${SLURM_JOB_NUM_NODES}
+
+# This script is for the Perlmutter CPU nodes
+
+# Perlmutter-specific fixes
+export FI_CXI_OPTIMIZED_MRS="false"
+export MPI4PY_RC_RECV_MPROBE="False"
+
+# Python environment
+export MALLOC_MMAP_THRESHOLD_=131072
+export PYTHONSTARTUP=""
+export PYTHONNOUSERSITE=1
+export HOME=$SCRATCH
+
+# TOAST variables
+export TOAST_FUNCTIME=1
+
+# Parallelization
+export OMP_NUM_THREADS=2
+export OMP_PLACES=threads
+export OMP_PROC_BIND=spread
+
+let nnode=$SLURM_JOB_NUM_NODES
+# 128 cores, 256 hardware threads
+let ntask_node=90  #256/$OMP_NUM_THREADS
+let ntask=$nnode*$ntask_node
+let ncore=$OMP_NUM_THREADS
+let groupsize=3  #1*$ntask_node
+
+echo "Running with"
+echo "            nnode = ${nnode}"
+echo "  OMP_NUM_THREADS = ${OMP_NUM_THREADS}"
+echo "       ntask_node = ${ntask_node}"
+echo "            ntask = ${ntask}"
+echo "        groupsize = ${groupsize}"
 
 
 

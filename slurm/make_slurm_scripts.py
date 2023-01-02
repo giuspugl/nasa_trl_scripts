@@ -27,7 +27,8 @@ def make_script (args):
         telescope= list(dic_lb['telescopes'].keys())[0] 
         band= list(dic_lb ['bands'].keys() )[0]
         print(f"script for {band} " )
-        ftmp  = open(f'./slurm/run.slrm','r')
+        
+        ftmp  = open(f'{sim_dir}/scripts/nasa_trl_scripts/slurm/run.slrm','r')
         scriptfile = open(f'{sim_dir}/scripts/{band}.slrm', 'w')
         
         for line in ftmp.readlines():
@@ -36,8 +37,7 @@ def make_script (args):
         scriptfile.close()
         with open( f'{sim_dir}/scripts/{band}.slrm', "a+") as txtfile:
             txtfile.write( f'hwprpm={hwp_rpm[telescope]}  \n' )
-            txtfile.write( f'ntask=1080  \n' )
-            txtfile.write( f'outdir="{sim_dir}/{band}"  \n' )
+            txtfile.write( f'outdir="{sim_dir}/outputs/{band}"  \n' )
             txtfile.write( f'blmfile="{blm_dir}/{band}/'+'{detector}.fits" \n' )
             txtfile.write( f'templatefile="{temp_dir}/template_map_T_{band}_top-hat_bpass_K_CMB.fits" \n' )
             txtfile.write( f'skyfile="{alm_dir}/{band}/'+'sky_alm_{detector}.fits" \n' )
@@ -50,8 +50,8 @@ def make_script (args):
  
             command="""
 echo Calling srun at $(date) \n \n 
-srun -n $ntask -N $nnode   ${pyscript}   --out_dir   ${outdir}  \
---schedule ${LBSIM}/input_data/schedule_3yrs.ecsv \
+srun -n $ntask -c $ncore --cpu_bind=cores   ${pyscript}   --out_dir   ${outdir}  \
+--schedule ${lbsim}/input_data/schedule_3yrs.ecsv \
 --focalplane  ${hardware}  \
 --config ${config} \
 --sim_satellite.hwp_rpm ${hwprpm} \

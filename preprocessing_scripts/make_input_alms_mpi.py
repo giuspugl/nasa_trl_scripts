@@ -41,12 +41,12 @@ for indx in  loc_indices  :
     
     bandpass = np.ones_like(band.value)
     
-    print( bandstring  )
+    print( bandstring, rank   )
     os.makedirs(f"{out_dir}/{bandstring}", exist_ok=True )
     
-    #low complexity foregrounds 
+    #low-complexity foregrounds 
     # https://galsci.github.io/blog/2022/common-fiducial-sky/   
-    sky = pysm3.Sky(nside=nside, preset_strings=["d9","s4","f1","a1","co1","c4","cib1", "tsz1", "ksz1", "rg1" ],output_unit='K_CMB')
+    sky = pysm3.Sky(nside=nside, preset_strings=["d9","s4","f1","a1","co1","c4","cib1", "tsz1", "ksz1" ],output_unit='K_CMB')
     
     if not os.path.exists( f"{temp_dir}/template_map_T_{bandstring}_top-hat_bpass_K_CMB.fits"): 
         skyT =sky.get_emission(freq=band, weights= bandpass )
@@ -58,7 +58,6 @@ for indx in  loc_indices  :
     detectors = (list(dic_lb['detectors'] .keys()  ))
     bpasses = pl.load(f"{bpass_dir}/{bandstring}_cheby.npz")
     for idet , det in enumerate(detectors) :
-        start= time.perf_counter() 
         
         almTfile =f"{out_dir}/{bandstring}/sky_alm_{det}_T.fits"
         almEBfile =f"{out_dir}/{bandstring}/sky_alm_{det}_EB.fits"
@@ -84,11 +83,7 @@ for indx in  loc_indices  :
         hp.write_alm(filename=almTfile  , alms =almT , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
         hp.write_alm(filename=almEBfile , alms =almEB , lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
         hp.write_alm(filename=almBEfile , alms =almBE, lmax=lmax, mmax=mmax , mmax_in=mmax, overwrite=True )
-    
-        end= time.perf_counter() 
-        #print(end-start)
-        #if idet >1: break 
-    #break 
+    del sky 
 comm.Barrier()
 
 comm.Disconnect 
